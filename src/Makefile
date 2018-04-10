@@ -30,25 +30,22 @@
 ## Last Modified: $Author: Ovidiu $
 ##
 ##
-
 CC=gcc52
-BIN=myfind
-OBJECTS=main.o myfind.o error_handling.o helpers.o dynchli.o
-LIBS=plfmfind.a 
-DEPS=main.h myfind.h error_handling.h helpers.h dynchli.h
-#CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu11
-CFLAGS= -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu11
-CPPFLAGS=-I./../linux
-LDFLAGS=-L./../linux -lplfmfind
+LIBS=libmypopen.a
+SOURCES=mypopen.c utils.c
+DEPS=mypopen.h utils.h
+OBJECTS=mypopen.o
+CFLAGS=-DDEBUG -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu11 -static
+#CPPFLAGS
 
 %.o: %.c $(DEPS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
+		$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
 all: $(OBJECTS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(BIN) $^ $(LDFLAGS)
+		ar -cqv $(LIBS) $(OBJECTS)
 
 clean:
-	$(RM) *.o *~ $(BIN)
+		$(RM) *.{a,o} *~ $(LIBS)
 
 .PHONY: clean
 
