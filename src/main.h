@@ -1,9 +1,9 @@
 /*
  * =====================================================================================
  *
- *       Filename:  main.c
+ *       Filename:  main.h
  *
- *    Description:  main File
+ *    Description:  main header file
  *
  *        Version:  1.0.0
  *        Created:  04/10/2018 09:40:05 AM
@@ -13,13 +13,7 @@
  *         Author:  Ovidiu - Dan Bogat [ic17b501], ic17b501@technikum-wien.at
  * =====================================================================================
  */
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include "main.h"
+#ifndef __main_h
+#define __main_h
 
-int main(int argc, char** argv)
-{
-    
-  return (EXIT_SUCCESS);
-}
+#endif /* main.h */
