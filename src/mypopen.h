@@ -13,7 +13,9 @@
  *         Author:  Ovidiu - Dan Bogat [ic17b501], ic17b501@technikum-wien.at
  * =====================================================================================
  */
-#ifndef __mypopen.h
-#define __mypopen.h
+#ifndef __mypopen_h
+#define __mypopen_h
+
+extern void init(void);
 
 #endif /* mypopen.h */

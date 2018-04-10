@@ -35,7 +35,6 @@ SUBDIRS=src
 RM=rm
 CFLAGS=-Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu89
 SRC_DIR=src
-PLF_SRC_DIR=linux
 DOC_DIR=doc
 DIST_DIR=bes2_grp11
 DISTNAME=$(DIST_DIR).zip
@@ -48,6 +47,10 @@ all: clean $(SUBDIRS)
 
 clean:
 	$(MAKE) $@ -C src
+	$(MAKE) $@ -C test
+
+test: clean all
+	$(MAKE) -C test
 
 dist: distclean 
 	mkdir $(DIST_DIR)
