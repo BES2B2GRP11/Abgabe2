@@ -61,7 +61,7 @@ $(RM) -rf $(DIST_DIR) || echo "Could not create the tarball $(DISNAME)"
 	@echo "Dist is ready to ship @ $(DISNAME)"
 
 distclean: clean
-	$(RM) -rf $(DOC_DIR) $(DIST_DIR) $(TARBALL)
+	$(RM) -rf $(DOC_DIR) $(DIST_DIR) $(DISTNAME) $(TARBALL)
 
 doxy dox doc: $(SUBDIRS)
 	doxygen doxygen.cfg 1> /dev/null
