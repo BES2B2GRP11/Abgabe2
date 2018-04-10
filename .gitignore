@@ -59,4 +59,8 @@ dkms.conf
 #Doxygenfiles
 doc/
 
+#AdditionalFiles
+examples/*example
+test/testsuite
+
 # End of https://www.gitignore.io/api/c

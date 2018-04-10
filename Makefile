@@ -35,6 +35,7 @@ SUBDIRS=src
 RM=rm
 CFLAGS=-Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu89
 SRC_DIR=src
+EXAMPLE_DIR=examples
 DOC_DIR=doc
 DIST_DIR=bes2_grp11
 DISTNAME=$(DIST_DIR).zip
@@ -48,13 +49,17 @@ all: clean $(SUBDIRS)
 clean:
 	$(MAKE) $@ -C src
 	$(MAKE) $@ -C test
+	$(MAKE) $@ -C examples
+
+examples: clean
+	$(MAKE) -C examples
 
 test: clean all
 	$(MAKE) -C test
 
 dist: distclean 
 	mkdir $(DIST_DIR)
-	cp -r $(SRC_DIR) $(PLF_SRC_DIR) doxygen.cfg Makefile $(DIST_DIR)
+	cp -r $(SRC_DIR) $(EXAMPLE_DIR) $(PLF_SRC_DIR) doxygen.cfg Makefile $(DIST_DIR)
 	sed -i -e s/DDEBUG/DNDEBUG/g $(DIST_DIR)/src/Makefile
 	$(ZIP) $(DISTNAME) $(DIST_DIR) 1> /dev/null &&\
 $(RM) -rf $(DIST_DIR) || echo "Could not create the tarball $(DISNAME)"
