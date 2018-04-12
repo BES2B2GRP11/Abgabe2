@@ -32,17 +32,20 @@
 ##
 
 CC=gcc52
-OBJECTS=fork.o
-DEPS=fork.h fork.c
+OBJECTS=fork.o exec.o
+DEPS=fork.h fork.c exec.c exec.h
 CFLAGS= -Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-common -ftrapv -g -O3 -std=gnu11
 
 %.o: %.c $(DEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
-all: fork
+all: fork exec
 
 fork: fork.o
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o forkexample fork.o
+
+exec: exec.o
+	$(CC) $(CPPFLAGS) $(CFLAGS) -o execexample exec.o
 
 clean:
 	$(RM) *.o *~ $(BIN)
