@@ -16,6 +16,9 @@
 #ifndef __mypopen_h
 #define __mypopen_h
 
-extern void init(void);
+#include <stdio.h>
+
+extern FILE* popen(const char*, const char*);
+extern int pclose(FILE*);
 
 #endif /* mypopen.h */

@@ -30,7 +30,7 @@
 ## Last Modified: $Author: Ovidiu $
 ##
 ##
-CC=gcc52
+CC=gcc
 LIBS=libmypopen.a
 SOURCES=mypopen.c utils.c
 DEPS=mypopen.h utils.h
