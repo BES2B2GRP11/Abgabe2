@@ -31,7 +31,7 @@
 ##
 ##
 
-CC=gcc52
+CC=gcc
 BIN=testsuite
 OBJECTS=testsuite.o 
 DEPS=testsuite.h

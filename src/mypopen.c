@@ -13,6 +13,24 @@
  *         Author:  Ovidiu - Dan Bogat [ic17b501], ic17b501@technikum-wien.at
  * =====================================================================================
  */
+#include <stdio.h>
 #include "mypopen.h"
-void init(void)
-{}
+
+FILE* popen(const char* cmd, const char* mode)
+{
+  FILE *f;
+  f=fopen("/tmp/1","r");
+  if(f == NULL)
+  {
+    
+  }
+  cmd=cmd;
+  mode=mode;
+  return f;
+}
+
+int pclose(FILE* stream)
+{
+  stream=stream;
+  return 0;
+}
