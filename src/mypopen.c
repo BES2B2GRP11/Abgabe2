@@ -21,6 +21,7 @@
 FILE* popen(const char* cmd, const char* mode)
 {
   cmd=cmd;
+  pid_t pid;
   int pdesc[2]; /* Pipe deskriptoren */
   
   
@@ -58,6 +59,45 @@ FILE* popen(const char* cmd, const char* mode)
     return NULL;
   }
   /* ENDE herstellen der pipe */
+
+  
+  /*        Fork und pid      */
+  /*         +---------+      */
+  /*      +--+  fork() +-+    */
+  /*      |  +---------+ |    */
+  /*      |              |    */
+  /* +----v---+     +----v--+ */
+  /* | parent |     | child | */
+  /* +--------+     +-------+ */
+  /* |return  |     |wenn   | */
+  /* | von    |     |fork() | */
+  /* |fork()  |     |klappt | */
+  /* |ist pid |     |kann   | */
+  /* | vom    |     |pid    | */
+  /* |child   |     |hier   | */
+  /* |oder -1 |     |nur    | */
+  /* |bei     |     |0      | */
+  /* |Fehler  |     |sein   | */
+  /* +--------+     +-------+ */
+  /*                          */
+  
+  /* Es wird gleich im Switchgeforked - spart eine variable */
+  /* Der Return-Wert vom fork() wird auch nur 1 mal in diesem Aufruf */
+  /* von popen abgefragt */
+  switch( pid=fork() )
+  {
+    case -1: 
+      /* Fehler fall, kann dennoch eintretten -- sind noch im parent */
+      /* Alles schlieszen was irgendwie offen ist */
+      /* ERRNO wird hier auch schon automatisch von fork() als syscall richtig gesetzt */
+      return NULL;
+    case 0:
+      /* Nur der Kindprozess kann den returnwert 0 haben */
+      /* Child */
+      break;
+  }
+  
+  /* Vater */
   
   return NULL;
 }
