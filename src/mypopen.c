@@ -13,6 +13,42 @@
  *         Author:  Ovidiu - Dan Bogat [ic17b501], ic17b501@technikum-wien.at
  * =====================================================================================
  */
+/*  Der fork Prozess + pipe() */
+/*                                  int pdesc[2]                                           */
+/*  +----------+                      +                                                    */
+/*  | pdesc[1] |                      |                                                    */
+/*  +----------+                      |                                                    */
+/*  |          |                      v                                                    */
+/*  |          | <-----------------+pipe(pdesc)                                            */
+/*  | pipe     |                      +                                                    */
+/*  |          |                      |                                                    */
+/*  |          |                      +----------------+ pdesc[0] lesen                    */
+/*  |          |                      |                  pdesc[1] schreiben                */
+/*  +----------+                      v                                                    */
+/*  | pdesc[0] |                    fork()                                                 */
+/*  +----------+                      +                                                    */
+/*                                    |                                                    */
+/*                                    |                                                    */
+/*                                    |                                                    */
+/*                      +-------------+-------------+                                      */
+/*                      |                           |                                      */
+/*                      |                           |                                      */
+/*                      v                           v                                      */
+/*                 vater mit                    kind mit                                   */
+/*                 pdesc[0]                     pdesc[0] <- eigene Kopie                   */
+/*                 pdesc[1]                     pdesc[1] <- eigene Kopie                   */
+/* popen mode(r): */
+/* Elternprozess liest von der pipe und kann pdesc[1] somit schlieszen. */
+/* Kindprozess schreibt in die Pipe und kann pdesc[0] schlieszen */
+/* */
+/* popen mode(w) */
+/* Elternprozess liest von der pipe und kann pdesc[0] somit schlieszen. */
+/* Kindprozess schreibt in die Pipe und kann pdesc[1] schlieszen */
+/* */
+/* popen verwendet fdopen nach dem fork. */
+/* fdopen kennt mehrere typen / modes, r,w,r+,w+ */
+/* es machen nur r und w beim popen sinn */
+/* Somit werden nur r oder w akzeptiert, wodurch die pipe nur halfduplex (nur in eine richtung moeglich) ist :) */
 #include <errno.h>
 #include <unistd.h>
 #include <stdio.h>
