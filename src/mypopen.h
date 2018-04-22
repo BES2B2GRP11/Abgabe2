@@ -33,7 +33,7 @@ static struct pid
 } *pidlist;
 
 
-extern FILE* popen(const char*, const char*);
-extern int pclose(FILE*);
+extern FILE* mypopen(const char*, const char*);
+extern int mypclose(FILE*);
 
 #endif /* mypopen.h */
