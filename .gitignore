@@ -62,5 +62,6 @@ doc/
 #AdditionalFiles
 examples/*example
 test/testsuite
+ressources/libpopentest
 
 # End of https://www.gitignore.io/api/c

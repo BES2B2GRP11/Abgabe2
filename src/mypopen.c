@@ -58,15 +58,6 @@
 #include <sys/wait.h>
 #include "mypopen.h"
 
-/* Das environment wird jedem programm mit uebergeben */
-/* Schreibt man die Main folgendermaszen: */
-/* int main(int argc, char** argv, char **environment) */
-/* hat man innerhalb der Main ueber die Liste 'environment' zugriff auf die Umgebungsvariablen */
-/* ohne unnoetig systemcalls absetzen zu muessen */
-//extern char **environment_pointer;
-/* Wir haben den pointer hier nur um uns zu merken, dass wir das Envorinment vom Child-Prozess explizit manipulieren koennen */
-/* dadurch muessen wir aus der exec-Familie die Funktionen mit 'e' im Namen verwenden */
-
 
 FILE* mypopen(const char* cmd, const char* mode)
 {
@@ -75,6 +66,14 @@ FILE* mypopen(const char* cmd, const char* mode)
   FILE *fp; /* wenn alles klappt, wird dieser returniert :) */
   int pdesc[2]; /* Pipe deskriptoren */
   char *argument_pointer[] = {"sh","-c",NULL,NULL}; /* wir fuehren immer "sh -c" aus fuer jedes cmd - argument_pointer[2] wird dann zu cmd */
+
+  /* Die Loesung mit der gelinkten liste ist trotzdem besser. */
+  /* Aber sei es drum... wenn man es so verlangt, verlangt man es so */
+  if (pidlist != NULL)
+  {
+    errno = EAGAIN;
+    return NULL;
+  }
   
   /* mode Sentinels */
   if ( mode[1] != '\0' )
@@ -272,13 +271,12 @@ int mypclose(FILE* stream)
   int pstat;
   pid_t pid;
   
-  
   for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
     if(curr->fp == stream)
        break;
   
   if(curr == NULL)
-    return(-1);
+    return(ECHILD);
   
   (void)fclose(stream);
   
@@ -291,5 +289,6 @@ int mypclose(FILE* stream)
 	else
     prev->next = curr->next;
 	free(curr);
+  
 	return (pid == -1 ? -1 : pstat);
 }
