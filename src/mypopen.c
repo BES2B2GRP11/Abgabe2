@@ -266,6 +266,12 @@ FILE* mypopen(const char* cmd, const char* mode)
 
 int mypclose(FILE* stream)
 {
+  if(fileno(stream) == -1 || stream == NULL)
+  {
+    errno=ECHILD;
+    return -1;
+  }
+  
   struct pid* volatile prev;
   struct pid* volatile curr;
   int pstat;
@@ -276,7 +282,10 @@ int mypclose(FILE* stream)
        break;
   
   if(curr == NULL)
-    return(ECHILD);
+  {
+    errno=ECHILD;
+    return(-1);
+  }
   
   (void)fclose(stream);
   
