@@ -56,13 +56,23 @@
 #include <stdlib.h>
 #include "mypopen.h"
 
+/* Das environment wird jedem programm mit uebergeben */
+/* Schreibt man die Main folgendermaszen: */
+/* int main(int argc, char** argv, char **environment) */
+/* hat man innerhalb der Main ueber die Liste 'environment' zugriff auf die Umgebungsvariablen */
+/* ohne unnoetig systemcalls absetzen zu muessen */
+extern char **environment_pointer;
+/* Wir haben den pointer hier nur um uns zu merken, dass wir das Envorinment vom Child-Prozess explizit manipulieren koennen */
+/* dadurch muessen wir aus der exec-Familie die Funktionen mit 'e' im Namen verwenden */
+
+
 FILE* popen(const char* cmd, const char* mode)
 {
   struct pid* volatile current;
   pid_t pid;
   FILE *fp; /* wenn alles klappt, wird dieser returniert :) */
   int pdesc[2]; /* Pipe deskriptoren */
-  cmd=cmd;
+  char *argument_pointer[] = {"sh","-c",NULL,NULL}; /* wir fuehren immer "sh -c" aus fuer jedes cmd - argument_pointer[2] wird dann zu cmd */
   
   /* mode Sentinels */
   if ( mode[1] != '\0' )
@@ -194,7 +204,21 @@ FILE* popen(const char* cmd, const char* mode)
           (void) close(pdesc[0]);
         }
         /* FERTIG MIT DEM EINRICHTEN DER PIPE FUER DAS CHILD */
-      
+        
+        /* CMD ausfuehren */
+        /* argument_pointer[2] wird auf cmd gesetzt fuer exec */
+        /* dadurch haben wir: */
+        /* +----------------------------------------------------------+ */
+        /* |                                                          | */
+        /* |                   arguments_pointer                      | */
+        /* |                                                          | */
+        /* |     +----------+ +---------+  +-------+  +--------+      | */
+        /* |     |   "sh"   | |  "-c"   |  | *cmd  |  |  NULL  |      | */
+        /* |     +----------+ +---------+  +-------+  +--------+      | */
+        /* |                                                          | */
+        /* +----------------------------------------------------------+ */
+        argument_pointer[2] = (char *)cmd;
+        /* Somit haben wir alles fuer den exec Aufruf vorbereitet: Pipe, und das Commando samt argumente */
         break;
       }
     }
