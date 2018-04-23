@@ -43,11 +43,18 @@ LDFLAGS=-L./../src -lmypopen
 %.o: %.c $(DEPS)
 	$(CC) $(CPPFLAGS) $(CFLAGS) -c $<
 
-all: $(OBJECTS)
-	$(CC) $(CPPFLAGS) $(CFLAGS) -o $(BIN) $^ $(LDFLAGS)
+all: popentest
+
+test-pipe: 
+	$(CC) -o test-pipe ./../src/mypopen.o -ltest-pipe &&\
+  ./test-pipe
+
+popentest: 
+	$(CC) -o popentest ./../src/mypopen.o -lpopentest -ldl &&\
+  ./popentest
 
 clean:
-	$(RM) *.o *~ $(BIN)
+	$(RM) *.o *~ $(BIN) ./popentest ./test-pipe
 
 .PHONY: clean
 

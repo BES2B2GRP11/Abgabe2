@@ -54,6 +54,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <paths.h>   /* Definiert Standard Pfade, mitunter fuer die Shell ('/bin/sh') */
+#include <sys/wait.h>
 #include "mypopen.h"
 
 /* Das environment wird jedem programm mit uebergeben */
@@ -61,12 +63,12 @@
 /* int main(int argc, char** argv, char **environment) */
 /* hat man innerhalb der Main ueber die Liste 'environment' zugriff auf die Umgebungsvariablen */
 /* ohne unnoetig systemcalls absetzen zu muessen */
-extern char **environment_pointer;
+//extern char **environment_pointer;
 /* Wir haben den pointer hier nur um uns zu merken, dass wir das Envorinment vom Child-Prozess explizit manipulieren koennen */
 /* dadurch muessen wir aus der exec-Familie die Funktionen mit 'e' im Namen verwenden */
 
 
-FILE* popen(const char* cmd, const char* mode)
+FILE* mypopen(const char* cmd, const char* mode)
 {
   struct pid* volatile current;
   pid_t pid;
@@ -219,7 +221,17 @@ FILE* popen(const char* cmd, const char* mode)
         /* +----------------------------------------------------------+ */
         argument_pointer[2] = (char *)cmd;
         /* Somit haben wir alles fuer den exec Aufruf vorbereitet: Pipe, und das Commando samt argumente */
-        break;
+        
+        execve(_PATH_BSHELL, argument_pointer,NULL);
+        
+        /* Wir koennen nicht wissen was nun genau schiefgelaufen ist */
+        /* Es kann das Kommando nicht ausgefuehrt werden weil, */
+        /* das Kommando nicht gefunden werden konne */
+        /* Oder weil das Kommand einen Library-Funktion aufruft, welche schiefgelaufen ist */
+        /* /bin/sh kann schiefgehen, etc.... */
+        /* Weil wir das hier nicht wissen koennen returnieren wir 127 */
+        _exit(127);
+        /* DIESER PUNKT IM CODE HIER WIRD NIE ERREICHT */
       }
     }
   
@@ -253,8 +265,31 @@ FILE* popen(const char* cmd, const char* mode)
   return fp;
 }
 
-int pclose(FILE* stream)
+int mypclose(FILE* stream)
 {
-  stream=stream;
-  return 0;
+  struct pid* volatile prev;
+  struct pid* volatile curr;
+  int pstat;
+  pid_t pid;
+  
+  
+  for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
+    if(curr->fp == stream)
+       break;
+  
+  if(curr == NULL)
+    return(-1);
+  
+  (void)fclose(stream);
+  
+  do {
+    pid = waitpid(curr->pid, &pstat, 0);
+	} while (pid == -1 && errno == EINTR);
+  
+  if (prev == NULL)
+    pidlist = curr->next;
+	else
+    prev->next = curr->next;
+	free(curr);
+	return (pid == -1 ? -1 : pstat);
 }
