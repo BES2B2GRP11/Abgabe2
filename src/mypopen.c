@@ -228,7 +228,7 @@ FILE* mypopen(const char* cmd, const char* mode)
         argument_pointer[2] = (char *)cmd;
         /* Somit haben wir alles fuer den exec Aufruf vorbereitet: Pipe, und das Commando samt argumente */
         
-        execve(_PATH_BSHELL, argument_pointer,NULL);
+        execve(_PATH_BSHELL, argument_pointer, NULL);
         
         /* Wir koennen nicht wissen was nun genau schiefgelaufen ist */
         /* Es kann das Kommando nicht ausgefuehrt werden weil, */
@@ -273,7 +273,11 @@ FILE* mypopen(const char* cmd, const char* mode)
 
 int mypclose(FILE* stream)
 {
-	
+	struct pid* volatile prev;
+  struct pid* volatile curr;
+  int pstat;
+  pid_t pid;
+  
 	/* Test 12 */
 	/* mypopen wurden noch nicht erfolgreich aufgerufen */
 	/* pidlist muss hier NULL sein */
@@ -295,11 +299,6 @@ int mypclose(FILE* stream)
     errno=ECHILD;
     return -1;
   }
-  
-	struct pid* volatile prev;
-  struct pid* volatile curr;
-  int pstat;
-  pid_t pid;
   
   for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
 	{
@@ -331,5 +330,6 @@ int mypclose(FILE* stream)
     prev->next = curr->next;
 	free(curr);
   
-	return (pid == -1 ? -1 : pstat);
+	/* Test 13 -- WEXITSTATUS vom pstat -- holt den returncode raus siehe man waitpid */
+	return (pid == -1 ? -1 : WEXITSTATUS(pstat));
 }
