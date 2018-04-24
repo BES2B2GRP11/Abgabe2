@@ -274,6 +274,15 @@ FILE* mypopen(const char* cmd, const char* mode)
 int mypclose(FILE* stream)
 {
 	
+	/* Test 12 */
+	/* mypopen wurden noch nicht erfolgreich aufgerufen */
+	/* pidlist muss hier NULL sein */
+	if(pidlist == NULL)
+	{
+		errno=ECHILD;
+		return -1;
+	} /* Test 12 Done */
+	
 	/* Test 03 */
 	if(stream == NULL)
 	{
