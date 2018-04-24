@@ -55,7 +55,7 @@ examples: clean
 	$(MAKE) -C examples
 
 test: clean all
-	$(MAKE) -C test
+	$(MAKE) -C test 
 
 dist: distclean 
 	mkdir $(DIST_DIR)

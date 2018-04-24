@@ -272,21 +272,29 @@ int mypclose(FILE* stream)
     return -1;
   }
   
-  struct pid* volatile prev;
+	struct pid* volatile prev;
   struct pid* volatile curr;
   int pstat;
   pid_t pid;
   
   for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
-    if(curr->fp == stream)
+	{
+		if(fileno(curr->fp) == fileno(stream))
        break;
+		else
+		{
+			errno=EINVAL;
+			return -1;
+		}
+	}
   
-  if(curr == NULL)
+	if(curr == NULL)
   {
     errno=ECHILD;
-    return(-1);
+    return -1;
   }
-  
+  	
+	
   (void)fclose(stream);
   
   do {

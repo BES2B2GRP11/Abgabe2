@@ -51,7 +51,7 @@ test-pipe:
 
 popentest: 
 	$(CC) -o popentest ./../src/mypopen.o -lpopentest -ldl &&\
-  ./popentest
+  ./popentest $$nr
 
 clean:
 	$(RM) *.o *~ $(BIN) ./popentest ./test-pipe
