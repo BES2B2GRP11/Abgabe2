@@ -237,7 +237,10 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* /bin/sh kann schiefgehen, etc.... */
         /* Weil wir das hier nicht wissen koennen returnieren wir 127 */
         //_exit(127);
+				/* Test 23 */
+				/* hier sollen wir explizit EXIT_FAILURE returnieren anstatt 127 */
 				_exit(EXIT_FAILURE);
+				/* Test 23 Done */
         /* DIESER PUNKT IM CODE HIER WIRD NIE ERREICHT */
       }
     }
