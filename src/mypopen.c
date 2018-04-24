@@ -302,7 +302,16 @@ int mypclose(FILE* stream)
   
   for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
 	{
-		if(fileno(curr->fp) == fileno(stream))
+		if(curr->fp != stream && fileno(curr->fp) == fileno(stream))
+		{
+			/* Test 20 */
+			/* fp ist nicht der gleiche von mypopen aber filedescriptor schon */
+			/* laut test soll errno == EINVLA und return -1 sein */
+			errno=EINVAL;
+			return -1;
+			/* Test 20 Done */
+		}	
+		else if(fileno(curr->fp) == fileno(stream))
        break;
 		else
 		{
