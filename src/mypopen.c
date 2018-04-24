@@ -56,6 +56,7 @@
 #include <stdlib.h>
 #include <paths.h>   /* Definiert Standard Pfade, mitunter fuer die Shell ('/bin/sh') */
 #include <sys/wait.h>
+#include <fcntl.h>
 #include "mypopen.h"
 
 
@@ -197,19 +198,25 @@ FILE* mypopen(const char* cmd, const char* mode)
             /* danke (dup2) ist STDOUT somit eine Kopie von pdesc[1], und pdesc[1] selbst kann nach erfolgreichem dup */
             /* geschlossen werden (es wird dupliziert) */
             (void) close(pdesc[0]);
-            //if(pdesc[1] != STDOUT_FILENO)
-            //{
-            (void) dup2(pdesc[1], STDOUT_FILENO);
-            (void) close(pdesc[1]);
-            //}
-            /* hier sollte laut man der dup2 nichts tun, wenn oldfd und newfd das gleiche sind, und newfd returnieren */
-            /* somit sollte das if statement unnoetigt sein */
+            if(pdesc[1] != STDOUT_FILENO)
+            {
+	      (void) dup2(pdesc[1], STDOUT_FILENO);
+	      (void) close(pdesc[1]);
+            }else{
+	      fcntl(pdesc[1],F_SETFD,0);
+	    }
+
           }else{
           /* mode kann nur noch 'w' sein */
           /* spielegverkehrt zu oben */
           (void) close(pdesc[1]);
-          (void) dup2(pdesc[0],STDIN_FILENO);
-          (void) close(pdesc[0]);
+	  if(pdesc[0] != STDIN_FILENO)
+	    {
+	      (void) dup2(pdesc[0],STDIN_FILENO);
+	      (void) close(pdesc[0]);
+	    }else{
+	    fcntl(pdesc[0],F_SETFD,0);
+	  }
         }
         /* FERTIG MIT DEM EINRICHTEN DER PIPE FUER DAS CHILD */
         
