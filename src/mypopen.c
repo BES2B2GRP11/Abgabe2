@@ -266,6 +266,14 @@ FILE* mypopen(const char* cmd, const char* mode)
 
 int mypclose(FILE* stream)
 {
+	
+	/* Test 03 */
+	if(stream == NULL)
+	{
+		errno=EINVAL;
+		return -1;
+	} /* Test 03 Done */
+	
   if(fileno(stream) == -1 || stream == NULL)
   {
     errno=ECHILD;
