@@ -228,7 +228,7 @@ FILE* mypopen(const char* cmd, const char* mode)
         argument_pointer[2] = (char *)cmd;
         /* Somit haben wir alles fuer den exec Aufruf vorbereitet: Pipe, und das Commando samt argumente */
         
-        execve(_PATH_BSHELL, argument_pointer, NULL);
+        execv(_PATH_BSHELL, argument_pointer);
         
         /* Wir koennen nicht wissen was nun genau schiefgelaufen ist */
         /* Es kann das Kommando nicht ausgefuehrt werden weil, */
@@ -236,7 +236,11 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* Oder weil das Kommand einen Library-Funktion aufruft, welche schiefgelaufen ist */
         /* /bin/sh kann schiefgehen, etc.... */
         /* Weil wir das hier nicht wissen koennen returnieren wir 127 */
-        _exit(127);
+        //_exit(127);
+				/* Test 23 */
+				/* hier sollen wir explizit EXIT_FAILURE returnieren anstatt 127 */
+				_exit(EXIT_FAILURE);
+				/* Test 23 Done */
         /* DIESER PUNKT IM CODE HIER WIRD NIE ERREICHT */
       }
     }
