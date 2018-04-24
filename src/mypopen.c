@@ -76,7 +76,14 @@ FILE* mypopen(const char* cmd, const char* mode)
   }
   
   /* mode Sentinels */
-  if ( mode[1] != '\0' )
+  /* TEST 04 */
+	if(mode == NULL)
+	{
+		errno = EINVAL;
+		return NULL;
+	} /* TEST 04 */
+	
+	if ( mode[1] != '\0' )
     {
       /* Wir haben mehr als nur einen char */
       errno = EINVAL;
