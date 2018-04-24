@@ -330,6 +330,15 @@ int mypclose(FILE* stream)
     prev->next = curr->next;
 	free(curr);
   
+	/* Test 14 */
+	/* WIFEXITED prueft ob der Child sich regulaer beendet hat. Falls nicht returniert es FALSE */
+	if(! WIFEXITED(pstat) )
+	{
+		errno=ECHILD;
+		return -1;
+	}/* Test 14 Done */
+	
+	
 	/* Test 13 -- WEXITSTATUS vom pstat -- holt den returncode raus siehe man waitpid */
 	return (pid == -1 ? -1 : WEXITSTATUS(pstat));
 }
