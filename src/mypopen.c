@@ -59,7 +59,6 @@
 #include <fcntl.h>
 #include "mypopen.h"
 
-
 FILE* mypopen(const char* cmd, const char* mode)
 {
   struct pid* volatile current;
@@ -298,6 +297,13 @@ int mypclose(FILE* stream)
 		return -1;
 	} /* Test 12 Done */
 	
+  /* Test 03 */
+  if(stream == NULL)
+  {
+    errno=EINVAL;
+    return -1;
+  }
+  
 	/* Test 03 */
 	//if(stream == NULL)
 	//{
