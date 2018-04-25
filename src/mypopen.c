@@ -299,11 +299,11 @@ int mypclose(FILE* stream)
 	} /* Test 12 Done */
 	
 	/* Test 03 */
-	if(stream == NULL)
-	{
-		errno=EINVAL;
-		return -1;
-	} /* Test 03 Done */
+	//if(stream == NULL)
+	//{
+	//	errno=EINVAL;
+	//	return -1;
+	//} /* Test 03 Done */
 	
   if(fileno(stream) == -1 || stream == NULL)
   {
