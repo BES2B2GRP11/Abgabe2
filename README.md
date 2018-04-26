@@ -2,6 +2,13 @@
 Agabe zum Beispiel 2
 
 
+**make** baut alle. Dazu muss man im Obersten Ordner sein (Abgabe2).
+
+**> make** --> baut das Programm
+**> make test**  --> baut alle Tests
+**> make test nr=X** --> baut nur den Test X
+**> make test nr='-v X'** _oder_ **> make test nr='-vv X'** _oder_ **> make test nr='-vvv X'** baut den test X mit zusaetzlichen Informationen
+
 Anleitungsvideo leider ohne Sound aber mit viel Text :)
 
 [![IMAGE ALT TEXT
