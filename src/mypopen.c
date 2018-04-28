@@ -57,7 +57,35 @@
 #include <paths.h>   /* Definiert Standard Pfade, mitunter fuer die Shell ('/bin/sh') */
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <signal.h>
 #include "mypopen.h"
+
+/* Test 26 und weitere */
+/* Hier muessen wir abgreifen, ob der CHILD Prozess die PIPE sauber einrichten kann */
+/* Wir wollen nicht, dass der PARENT auf den child warten muss bis das erledigt ist */ 
+/* wir haben auch sonst wenig auswahl */ 
+/* Bei myclose wird das im Zuge der Tests (wie etwa Test 26) abgefragt. */
+/* Der FILE Pointer von myclose, ist jener vom PARENT returnierte - dieser hat aber keine Informationen ueber die Variablen vom Child */
+/* dup2 erfolgt lediglich im CHILD fuer seine Variablen und der Vater sieht diese nicht. */ 
+/* SOMIT: */
+/* myclose wartet eh schon darauf, dass der CHILD seinen Status aender (waitpid) */
+/* ganz gleich ob parent oder child zuerst fertig sind, WIR setzen uns global eine Variable um zu wissen, dass das einrichten der PIPE nicht sauber war */
+/* wir Signalisieren dafuer dem Parent (ganz gleich wann wahrend der ausfuehrung), dass das Einrichten der PIPE schiefgelaufen ist mit einem KILL */
+/* 1) wir registrieren eine Funktion (signalHandler oder wie auch immer) fuer den Fall, dass ein SIGNAL reinkommt */
+/* kill() sendet ein Signal an eine PID --> kill(getppid(),SIGPIPE) wobei ppid die ParentprozessID ist */
+/* signalHandler() arbeitet dann ALLE SIGNALE ab, wir senden jedoch nur eines... nicht sehr sauber, aber es fehlt die ZEIT ALLE SIGNALE ABZUBILDEN.... */
+/* signalHandler setzt beim entsprechenden signal eine Variable dirty_pipe auf 1 */
+/* diese wird an der entsprechenden Stelle verifiziert */
+/* Weil wir eine gelinkte Liste haben, die laut den Tests aber eh nur 1 File Pointer halten darf / soll :/ ist das auf dauer nicht die sauberste Loesung  JEEEEDOCH */
+/* ABER ECHT JEEEDOCH ---> hat der Parent mehrere Childs, die eventuell auch miteinandere Kommunizieren, muessen Modalitaeten erschaffen werden, dass SIGPIPE auch die richtige PIPE */
+/* bezeichnet. Wir haben wir laut den tests nur 1, und sollen auch nur 1 haben, somit ist die Loesung voellig legitim */
+/* In allen anderen Faellen muss das signal SIGPIPE dem richtigen FILE Pointer des Parents zugewiesen werden (mittels pid vom CHILD etc) */
+/* Das ist overkill fuer diese Abgabe, und die Lektoren haben sowas auch nicht verlang, bzw. explizit ausgeschlossen, indem NUR EIN FILEPOINTER erlaubt und gewuenscht ist */
+void signalHandler(int signal)
+{
+  if(signal == SIGPIPE)
+    pidlist->dirty_pipe =1;
+} /* Test 26 DONE */
 
 FILE* mypopen(const char* cmd, const char* mode)
 {
@@ -80,20 +108,20 @@ FILE* mypopen(const char* cmd, const char* mode)
   /* Die Loesung mit der gelinkten liste ist trotzdem besser. */
   /* Aber sei es drum... wenn man es so verlangt, verlangt man es so */
   if (pidlist != NULL)
-  {
-    errno = EAGAIN;
-    return NULL;
-  }
+    {
+      errno = EAGAIN;
+      return NULL;
+    }
   
   /* mode Sentinels */
   /* TEST 04 */
-	if(mode == NULL)
-	{
-		errno = EINVAL;
-		return NULL;
-	} /* TEST 04 */
+  if(mode == NULL)
+    {
+      errno = EINVAL;
+      return NULL;
+    } /* TEST 04 */
 	
-	if ( mode[1] != '\0' )
+  if ( mode[1] != '\0' )
     {
       /* Wir haben mehr als nur einen char */
       errno = EINVAL;
@@ -118,6 +146,13 @@ FILE* mypopen(const char* cmd, const char* mode)
   /* andere implementierungen ohne header file haben die definition gleich im source file */
   if((current = malloc(sizeof(struct pid))) == NULL)
     return NULL;
+  
+  /* Test 26 und weitere */
+  /* Info's zum Signal sind oben */
+  /* SIGPIPE wurde aus offensichtlichen Gruenden verwendet */
+  current->dirty_pipe = 0;
+  signal(SIGPIPE,signalHandler);
+  /* Test 26 DONE */
   
   /* herstellen der pipe */
   if ( pipe(pdesc) < 0 )
@@ -177,7 +212,7 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* Child */
         
         /* Wir brauchen einen Zeiger p um die Liste von pids zu iterieren */
-	/* valitile hat hier gen gleichen grund wie oben bei current */
+        /* valitile hat hier gen gleichen grund wie oben bei current */
         struct pid* volatile p;
       
         /* Wir schließen alle dem Child lokalen Kopien aller Filepointer, welche von anderen popen-childs erstellt wurden */
@@ -209,24 +244,26 @@ FILE* mypopen(const char* cmd, const char* mode)
             /* geschlossen werden (es wird dupliziert) */
             (void) close(pdesc[0]);
             if(pdesc[1] != STDOUT_FILENO)
-            {
-	      (void) dup2(pdesc[1], STDOUT_FILENO);
-	      (void) close(pdesc[1]);
-            }else{
-	      fcntl(pdesc[1],F_SETFD,0);
-	    }
+              {
+                if(dup2(pdesc[1], STDOUT_FILENO)<0)
+                  kill(getppid(),SIGPIPE); // Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist
+                (void) close(pdesc[1]);
+              }else{
+              fcntl(pdesc[1],F_SETFD,0);
+            }
 
           }else{
           /* mode kann nur noch 'w' sein */
           /* spielegverkehrt zu oben */
           (void) close(pdesc[1]);
-	  if(pdesc[0] != STDIN_FILENO)
-	    {
-	      (void) dup2(pdesc[0],STDIN_FILENO);
-	      (void) close(pdesc[0]);
-	    }else{
-	    fcntl(pdesc[0],F_SETFD,0);
-	  }
+          if(pdesc[0] != STDIN_FILENO)
+            {
+              if(dup2(pdesc[0],STDIN_FILENO)<0)
+                kill(getppid(),SIGPIPE); // Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist
+              (void) close(pdesc[0]);
+            }else{
+            fcntl(pdesc[0],F_SETFD,0);
+          }
         }
         /* FERTIG MIT DEM EINRICHTEN DER PIPE FUER DAS CHILD */
         
@@ -254,10 +291,10 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* /bin/sh kann schiefgehen, etc.... */
         /* Weil wir das hier nicht wissen koennen returnieren wir 127 */
         //_exit(127);
-				/* Test 23 */
-				/* hier sollen wir explizit EXIT_FAILURE returnieren anstatt 127 */
-				_exit(EXIT_FAILURE);
-				/* Test 23 Done */
+        /* Test 23 */
+        /* hier sollen wir explizit EXIT_FAILURE returnieren anstatt 127 */
+        _exit(EXIT_FAILURE);
+        /* Test 23 Done */
         /* DIESER PUNKT IM CODE HIER WIRD NIE ERREICHT */
       }
     }
@@ -288,7 +325,6 @@ FILE* mypopen(const char* cmd, const char* mode)
   pidlist = current;       /* hier wird der Zeiger pidlist auf das neue element gesetzt, wodurch current effektiv am Anfang der Liste eingefuegt wurde */
   /* ist pidlist null, so ist dies das erste element der liste und current->next == NULL */
   /* dadurch funktioniert die forschleife (p=pidlist;p;p->next) auch wunder bar, da mit ';p;' geschaut wird, oder p == NULL ist */
-  
   return fp;
 }
 
@@ -299,77 +335,80 @@ int mypclose(FILE* stream)
   int pstat;
   pid_t pid;
   
-	/* Test 12 */
-	/* mypopen wurden noch nicht erfolgreich aufgerufen */
-	/* pidlist muss hier NULL sein */
-	if(pidlist == NULL)
-	{
-		errno=ECHILD;
-		return -1;
-	} /* Test 12 Done */
-	
+  /* Test 12 */
+  /* mypopen wurden noch nicht erfolgreich aufgerufen */
+  /* pidlist muss hier NULL sein */
+  if(pidlist == NULL)
+    {
+      errno=ECHILD;
+      return -1;
+    } /* Test 12 Done */
+        
   /* Test 03 */
   if(stream == NULL)
-  {
-    errno=EINVAL;
-    return -1;
-  }
+    {
+      errno=EINVAL;
+      return -1;
+    } /* Test 03 Done */
   
   if(fileno(stream) == -1 || stream == NULL)
-  {
-    errno=ECHILD;
-    return -1;
-  }
-  
+    {
+      errno=ECHILD;
+      return -1;
+    }
+
   for(prev = NULL, curr = pidlist; curr; prev = curr, curr=curr->next)
-	{
-		if(curr->fp != stream && fileno(curr->fp) == fileno(stream))
-		{
-			/* Test 20 */
-			/* fp ist nicht der gleiche von mypopen aber filedescriptor schon */
-			/* laut test soll errno == EINVLA und return -1 sein */
-			errno=EINVAL;
-			return -1;
-			/* Test 20 Done */
-		}	
-		else if(fileno(curr->fp) == fileno(stream))
-       break;
-		else
-		{
-			errno=EINVAL;
-			return -1;
-		}
-	}
+    {
+      if(curr->fp != stream && fileno(curr->fp) == fileno(stream))
+        {
+          /* Test 20 */
+          /* fp ist nicht der gleiche von mypopen aber filedescriptor schon */
+          /* laut test soll errno == EINVLA und return -1 sein */
+          errno=EINVAL;
+          return -1;
+          /* Test 20 Done */
+        }       
+      else if(fileno(curr->fp) == fileno(stream))
+        break;
+      else
+        {
+          errno=EINVAL;
+          return -1;
+        }
+    }
   
-	if(curr == NULL)
-  {
-    errno=ECHILD;
-    return -1;
-  }
-	
-	
-	
-	(void)fclose(stream);
-  
+  if(curr == NULL)
+    {
+      errno=ECHILD;
+      return -1;
+    }
+ 
+  (void)fclose(stream);
+
   do {
     pid = waitpid(curr->pid, &pstat, 0);
-	} while (pid == -1 && errno == EINTR);
+  } while (pid == -1 && errno == EINTR);  
+
+  /* Test 26 und weitere */
+  /* Wird ueber einem Signal aus dem CHILD gesetzt */
+  if(curr->dirty_pipe == 1)
+    return EXIT_FAILURE;
+  /* Test 26 DONE */
   
   if (prev == NULL)
     pidlist = curr->next;
-	else
+  else
     prev->next = curr->next;
-	free(curr);
+  free(curr);
   
-	/* Test 14 */
-	/* WIFEXITED prueft ob der Child sich regulaer beendet hat. Falls nicht returniert es FALSE */
-	if(! WIFEXITED(pstat) )
-	{
-		errno=ECHILD;
-		return -1;
-	}/* Test 14 Done */
-	
-	
-	/* Test 13 -- WEXITSTATUS vom pstat -- holt den returncode raus siehe man waitpid */
-	return (pid == -1 ? -1 : WEXITSTATUS(pstat));
+  /* Test 14 */
+  /* WIFEXITED prueft ob der Child sich regulaer beendet hat. Falls nicht returniert es FALSE */
+  if(! WIFEXITED(pstat) )
+    {
+      errno=ECHILD;
+      return -1;
+    }/* Test 14 Done */
+  
+  /* Test 13 -- WEXITSTATUS vom pstat -- holt den returncode raus siehe man waitpid */
+  return (pid == -1 ? EXIT_FAILURE : WEXITSTATUS(pstat));
 }
