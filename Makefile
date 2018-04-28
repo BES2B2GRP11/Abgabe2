@@ -37,11 +37,13 @@ CFLAGS=-Wall -pedantic -Werror -Wextra -Wstrict-prototypes -Wformat=2 -fno-commo
 SRC_DIR=src
 EXAMPLE_DIR=examples
 DOC_DIR=doc
+TEST_DIR=test
 DIST_DIR=bes2_grp11
-DISTNAME=$(DIST_DIR).zip
+DISTNAME="$(DIST_DIR).zip"
 TARBALL=$(DIST_DIR).tar.bz2
 TAR=tar -cvjf
 ZIP=zip -r
+SUBSCRIPT=/usr/local/bin/FHCheckSubmission.py
 
 all: clean $(SUBDIRS)
 	$(MAKE) -C src
@@ -49,24 +51,27 @@ all: clean $(SUBDIRS)
 clean:
 	$(MAKE) $@ -C src
 	$(MAKE) $@ -C test
-	$(MAKE) $@ -C examples
-
-examples: clean
-	$(MAKE) -C examples
 
 test: clean all
 	$(MAKE) -C test 
 
-dist: distclean 
+dist-check:
+	mkdir check-$(DIST_DIR)
+	cp -r $(SRC_DIR) $(TEST_DIR) doxygen.cfg Makefile check-$(DIST_DIR)
+	sed -i -e s/DDEBUG/DNDEBUG/g check-$(DIST_DIR)/src/Makefile
+	cd check-$(DIST_DIR) && make test && make clean
+	rm -rf check-$(DIST_DIR)
+
+dist: distclean dist-check
 	mkdir $(DIST_DIR)
-	cp -r $(SRC_DIR) $(EXAMPLE_DIR) $(PLF_SRC_DIR) doxygen.cfg Makefile $(DIST_DIR)
+	cp -r $(SRC_DIR) $(TESTDIR) doxygen.cfg Makefile $(DIST_DIR)
 	sed -i -e s/DDEBUG/DNDEBUG/g $(DIST_DIR)/src/Makefile
 	$(ZIP) $(DISTNAME) $(DIST_DIR) 1> /dev/null &&\
-$(RM) -rf $(DIST_DIR) || echo "Could not create the tarball $(DISNAME)"
-	@echo "Dist is ready to ship @ $(DISNAME)"
+		$(RM) -rf $(DIST_DIR) || echo "Could not create the tarball $(DISTNAME)"
+	@echo "Dist is ready to ship @ $(DISTNAME)"
 
 distclean: clean
-	$(RM) -rf $(DOC_DIR) $(DIST_DIR) $(DISTNAME) $(TARBALL)
+	$(RM) -rf $(DOC_DIR) $(DIST_DIR) $(DISTNAME) check-$(DIST_DIR) $(TARBALL)
 
 doxy dox doc: $(SUBDIRS)
 	doxygen doxygen.cfg 1> /dev/null

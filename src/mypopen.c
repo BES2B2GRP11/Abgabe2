@@ -81,12 +81,54 @@
 /* bezeichnet. Wir haben wir laut den tests nur 1, und sollen auch nur 1 haben, somit ist die Loesung voellig legitim */
 /* In allen anderen Faellen muss das signal SIGPIPE dem richtigen FILE Pointer des Parents zugewiesen werden (mittels pid vom CHILD etc) */
 /* Das ist overkill fuer diese Abgabe, und die Lektoren haben sowas auch nicht verlang, bzw. explizit ausgeschlossen, indem NUR EIN FILEPOINTER erlaubt und gewuenscht ist */
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  signalHandler
+ *  Description:  behandelt Signale
+ * =====================================================================================
+ *
+ *//*!
+    *	@brief Behandelt signale
+    * 
+    * Wir verwenden nur eines vom CHILD zum Parent -> SIGPIPE, falls das Einrichten der PIPE
+    * fehlt schlägt (dup2 geht schief z.B. beim Test 26)
+    * Andere Signale werden nicht behandelt, auch nicht registriert... 
+    * Ist aber auch nirgends verlangt oder getestet.
+    * Es ist ausgeschrieben, dass SIGNALE nicht notwendig sind, explizit verboten sind sie aber auch nicht (andere Sachen sehr wohl)
+    * Somit bleibt diese Lösung
+    *
+    *	@param signal (int)
+    *	@version 1.0.0
+    *	@date 2018/04/28
+    * @author Ovidiu - Dan Bogat
+    *
+    * =====================================================================================
+    */
 void signalHandler(int signal)
 {
   if(signal == SIGPIPE)
     pidlist->dirty_pipe =1;
 } /* Test 26 DONE */
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  mypopen
+ *  Description:  Herzstueck - forkt und richtet eine Pipe entsprechend ein
+ * =====================================================================================
+ *
+ *//*!
+    *	@brief Fork den prozess, richtet eine entsprechnde PIPE ein, und fuehrt das uebergeben Kommando cmd aus
+    
+    *	@param cmd (const char*)
+    * @param mode (const char*)
+    * @return ein File Pointer auf die PIPE (FILE*)
+    *	@version 1.0.0
+    *	@date 2018/04/28
+    * @author Ovidiu - Dan Bogat
+    *
+    * =====================================================================================
+    */
 FILE* mypopen(const char* cmd, const char* mode)
 {
   /* volatile wir hier aufgrund des forkes verwendet */
@@ -328,6 +370,26 @@ FILE* mypopen(const char* cmd, const char* mode)
   return fp;
 }
 
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  mypoclose
+ *  Description:  Herzstueck - wartet auf CHILD Prozess, und schliesst den FILE-Pointer
+ * =====================================================================================
+ *
+ *//*!
+    *	@brief Warte auf CHILDS und schließt alles
+    * 
+    * returniert wird das was das CHILD meldet, oder fuer Test 26 EXIT_FAILURE
+    
+    *	@param stream (FILE*)
+    * @return Return vom CHILD oder einen Fehlerstatus (int)
+    *	@version 1.0.0
+    *	@date 2018/04/28
+    * @author Ovidiu - Dan Bogat
+    *
+    * =====================================================================================
+    */
 int mypclose(FILE* stream)
 {
   struct pid* volatile prev;
