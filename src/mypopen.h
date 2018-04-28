@@ -30,9 +30,10 @@ static struct pid
   FILE *fp;
   pid_t pid;
   struct pid *next;
+  int dirty_pipe;
 } *pidlist;
 
-
+extern void signalHandler(int);
 extern FILE* mypopen(const char*, const char*);
 extern int mypclose(FILE*);
 
