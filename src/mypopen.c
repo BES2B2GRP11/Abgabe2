@@ -61,6 +61,16 @@
 
 FILE* mypopen(const char* cmd, const char* mode)
 {
+  /* volatile wir hier aufgrund des forkes verwendet */
+  /* volatile sagt dem compiler nur, dass sich die Daten zu jeder Zeit unerwartet aendern konnen */
+  /* das wird bei der optimizierung duch den compiler benutzt (-Ox) */
+  /* so wie es hier verwendet wird, ist der Zeiger volatil, jedoch nicht die Daten */
+  /* ein problem entsteht dann, wenn parent und child die globale structur (oder auch nur eine variable) mittels */
+  /* einem Zeiger ansprechen wollen. */ 
+  /* Die Struktur ist die gleiche, jedoch wird 1 Mal der Zeiger vom parent verwendet, ein anderes Mal der Zeiger vom child */ 
+  /* dieser kontext switch muss dem gnu compiler gesagt werden (manche erkennt er von selbst und fügt das keyword selbst ein) */
+  /* aber man merke: Multithread (auch fork) + Globales irgendwas ? volatile verwenden : aspirin kaufen */
+  /* es ist dabei zu beachten wo man das keyword einfügt (sind die Daten volatil, oder der Zeiger, doer beides...) */
   struct pid* volatile current;
   pid_t pid;
   FILE *fp; /* wenn alles klappt, wird dieser returniert :) */
@@ -167,13 +177,14 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* Child */
         
         /* Wir brauchen einen Zeiger p um die Liste von pids zu iterieren */
+	/* valitile hat hier gen gleichen grund wie oben bei current */
         struct pid* volatile p;
       
         /* Wir schließen alle dem Child lokalen Kopien aller Filepointer, welche von anderen popen-childs erstellt wurden */
         /* Diese brauchen wir nicht */
         for(p=pidlist;p;p=p->next)
-          (void) close(fileno(p->fp)); 
-      
+          (void) close(fileno(p->fp));  
+     
       
         /* wir prüfen die Art der Kommunikation mit dem Parten-Prozss */
         /* wir werden als child entweder lesen oder schrieben */
@@ -283,7 +294,7 @@ FILE* mypopen(const char* cmd, const char* mode)
 
 int mypclose(FILE* stream)
 {
-	struct pid* volatile prev;
+  struct pid* volatile prev;
   struct pid* volatile curr;
   int pstat;
   pid_t pid;
@@ -304,13 +315,6 @@ int mypclose(FILE* stream)
     return -1;
   }
   
-	/* Test 03 */
-	//if(stream == NULL)
-	//{
-	//	errno=EINVAL;
-	//	return -1;
-	//} /* Test 03 Done */
-	
   if(fileno(stream) == -1 || stream == NULL)
   {
     errno=ECHILD;
@@ -342,9 +346,10 @@ int mypclose(FILE* stream)
     errno=ECHILD;
     return -1;
   }
-  	
 	
-  (void)fclose(stream);
+	
+	
+	(void)fclose(stream);
   
   do {
     pid = waitpid(curr->pid, &pstat, 0);
