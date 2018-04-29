@@ -2,7 +2,7 @@
 Agabe zum Beispiel 2
 
 
-**make** baut alle. Dazu muss man im Obersten Ordner sein (Abgabe2).
+**make** baut alles. Dazu muss man im Obersten Ordner sein (Abgabe2).
 
 **> make** --> baut das Programm
 
@@ -12,6 +12,7 @@ Agabe zum Beispiel 2
 
 **> make test nr='-v X'** _oder_ **> make test nr='-vv X'** _oder_ **> make test nr='-vvv X'** baut den test X mit zusaetzlichen Informationen
 
+**> make dist** baut die Abgabe mit einem vorherigen Check
 
 Anleitungsvideo leider ohne Sound aber mit viel Text :)
 
