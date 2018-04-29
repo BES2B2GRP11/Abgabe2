@@ -242,9 +242,9 @@ FILE* mypopen(const char* cmd, const char* mode)
       /* Alles schlieszen was irgendwie offen ist */
       /* ERRNO wird hier auch schon automatisch von fork() als syscall richtig gesetzt */
       /* wir raeumen auf und returnieren NULL */
-      (void) close(pdesc[0]); // (void) weil return von close hier uninteressant ist
-      (void) close(pdesc[1]); // (void) weil return von close hier uninteressant ist
-      free(current);          // An diesem Punkt haben wir einen Speicher von malloc erhalten
+      (void) close(pdesc[0]); /* (void) weil return von close hier uninteressant ist */
+      (void) close(pdesc[1]); /* (void) weil return von close hier uninteressant ist */
+      free(current);          /* An diesem Punkt haben wir einen Speicher von malloc erhalten */
       return NULL;
       /* NIE ERREICHBARER PUKNT IM CODE */
     case 0:
@@ -288,7 +288,7 @@ FILE* mypopen(const char* cmd, const char* mode)
             if(pdesc[1] != STDOUT_FILENO)
               {
                 if(dup2(pdesc[1], STDOUT_FILENO)<0)
-                  kill(getppid(),SIGPIPE); // Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist
+                  kill(getppid(),SIGPIPE); /* Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist */
                 (void) close(pdesc[1]);
               }else{
               fcntl(pdesc[1],F_SETFD,0);
@@ -301,7 +301,7 @@ FILE* mypopen(const char* cmd, const char* mode)
           if(pdesc[0] != STDIN_FILENO)
             {
               if(dup2(pdesc[0],STDIN_FILENO)<0)
-                kill(getppid(),SIGPIPE); // Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist
+                kill(getppid(),SIGPIPE); /* Die einzig vernuenftige moeglichkeit zu signalisieren, dass PIPE nicht sauber ist */
               (void) close(pdesc[0]);
             }else{
             fcntl(pdesc[0],F_SETFD,0);
@@ -332,7 +332,6 @@ FILE* mypopen(const char* cmd, const char* mode)
         /* Oder weil das Kommand einen Library-Funktion aufruft, welche schiefgelaufen ist */
         /* /bin/sh kann schiefgehen, etc.... */
         /* Weil wir das hier nicht wissen koennen returnieren wir 127 */
-        //_exit(127);
         /* Test 23 */
         /* hier sollen wir explizit EXIT_FAILURE returnieren anstatt 127 */
         _exit(EXIT_FAILURE);
