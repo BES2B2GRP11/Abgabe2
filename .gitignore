@@ -68,5 +68,6 @@ ressources/libpopentest
 resources/
 *.zip
 doxygen.cfg
+bes2_grp11/
 
 # End of https://www.gitignore.io/api/c
